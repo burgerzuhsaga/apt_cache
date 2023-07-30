@@ -1,0 +1,24 @@
+name: 'Apt save state'
+description: 'This action will try to save apt state'
+inputs:
+  key: 
+    description: 'Cache key'
+    required: true
+    default: apt
+runs:
+  using: "composite"
+  steps:
+      - name: Restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            var/lib/apt
+            var/cache/apt
+            etc/apt
+          key: apt
+      # Runs a set of commands using the runners shell
+      - name: Setup
+        run: |
+            for i in var/{lib,cache}/apt ; do sudo rm -R "/$i" || : ; mkdir -pv "$i"; sudo mv -v {,/}"$i" ; done
+            if [ -d etc/apt ]; then sudo rm -R "/etc/apt" || : ; sudo mv -v {,/}"etc/apt" ; fi
+      
