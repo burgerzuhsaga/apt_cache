@@ -54,7 +54,7 @@ runs:
                 sudo mv -v {,/}"etc/apt" 
             fi
           fi
-          if [ -n '${{ inputs.pkgs }}' ]; then
+          if test -n '${{ inputs.pkgs }}' ; then
             apt-get update
             apt-get install --no-install-recommends --no-install-suggests --yes --allow-downgrades ${{ inputs.pkgs }} 
             apt-get autoclean
