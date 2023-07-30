@@ -4,11 +4,9 @@ inputs:
   gh_token: 
     description: 'Github token'
     required: true
-    default: ${{ secrets.GITHUB_TOKEN }}
   gh_repo: 
     description: 'Github repository'
     required: true
-    default: ${{ github.repository }}
   key: 
     description: 'Cache key'
     required: true
