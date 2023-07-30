@@ -1,12 +1,12 @@
 name: 'Apt state saver'
 description: 'This action will try to save apt state'
 inputs:
-  gh_token: 
-    description: 'Github token'
-    required: true
-  gh_repo: 
-    description: 'Github repository'
-    required: true
+#  gh_token: 
+#    description: 'Github token'
+#    required: true
+#  gh_repo: 
+#    description: 'Github repository'
+#    required: true
   key: 
     description: 'Cache key'
     required: true
@@ -30,12 +30,12 @@ runs:
             for i in var/{lib,cache}/apt ; do sudo rm -R "/$i" || : ; mkdir -pv "$i"; sudo mv -v {,/}"$i" ; done
             if [ -d etc/apt ]; then sudo rm -R "/etc/apt" || : ; sudo mv -v {,/}"etc/apt" ; fi
           post: |
-            GH_TOKEN=${{ inputs.gh_token }} gh cache delete ${{ inputs.key }} -R ${{ inputs.gh_repo }} || :
+            echo "UPDATE_CACHE=true" >> $GITHUB_ENV
             for i in /var/{lib/apt/lists,cache/apt/archives}/{partial,lock}; do sudo rm -R "$i" ||: ; done
             for i in {var/{lib,cache},etc}; do mkdir -p "$i" || : ; sudo mv -v {/,}"$i"/apt ; done
             
            
-  
+  # GH_TOKEN=${{ inputs.gh_token }} gh cache delete ${{ inputs.key }} -R ${{ inputs.gh_repo }} || :
   #  - run: echo Hello ${{ inputs.who-to-greet }}.
   #    shell: bash
   #  - id: random-number-generator
