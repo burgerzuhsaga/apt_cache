@@ -5,26 +5,60 @@ inputs:
     description: 'Cache key'
     required: true
     default: apt
+  etc:
+    description: 'Save settings'
+    required: true
+    default: false
+  lib: 
+    description: 'Apt lib'
+    required: true
+    default: var/lib/apt
+  cache: 
+    description: 'Apt cache'
+    required: true
+    default: var/cache/apt
 runs:
   using: "composite"
   steps:
       - name: Cleanup
         shell: bash
         run: |
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} gh cache delete apt -R ${{ github.repository }} || :
-            for i in /var/{lib/apt/lists,cache/apt/archives}/{partial,lock}; do sudo rm -R "$i" ||: ; done
-            for i in {var/{lib,cache},etc}; do mkdir -p "$i" || : ; sudo mv -v {/,}"$i"/apt ; done
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} gh cache delete apt -R ${{ github.repository }} || :
+          for i in /{${{ inputs.lib }}/lists,${{ inputs.cache }}/archives}/{partial,lock}; do 
+            sudo rm -R "$i" ||: 
+          done
+          for i in ${{ inputs.lib }} ${{ inputs.cache }}; do 
+            mkdir -p "$(dirname "$i")" || : 
+            sudo mv -v {/,}"$i"
+          done
+          if [ '${{ inputs.etc }}' != 'false' ]; then
+            mkdir -p "etc" || : 
+            sudo mv -v {/,}etc/apt         
+          fi
+      
+      - name: Prepare
+        shell: bash
+        run: |
+          echo 'CACHE_PATH<<EOF' >> $GITHUB_ENV          
+          echo ${{ inputs.lib }} >> $GITHUB_ENV          
+          echo ${{ inputs.cache }} >> $GITHUB_ENV
+          if [ '${{ inputs.etc }}' != 'false' ]; then
+            echo etc/apt >> $GITHUB_ENV          
+          fi
+          echo EOF >> $GITHUB_ENV      
       
       - name: Save
         uses: actions/cache/save@v3
         with:
-          path: |
-            var/lib/apt
-            var/cache/apt
-            etc/apt
+          path: ${{ env.CACHE_PATH }}
           key: ${{ inputs.key }}
 
       - name: Postjob
         shell: bash
         run: |
-            for i in {var/{lib,cache},etc}; do sudo mv -v {,/}"$i"/apt ; done
+          for i in ${{ inputs.lib }} ${{ inputs.cache }}; do 
+            sudo mv -v {,/}"$i" 
+          done
+          if [ '${{ inputs.etc }}' != 'false' ]; then
+            sudo mv -v {,/}etc/apt         
+          fi

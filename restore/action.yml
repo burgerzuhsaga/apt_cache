@@ -7,22 +7,53 @@ inputs:
     default: apt
   etc:
     description: 'Save settings'
+    required: true
+    default: false
+  lib: 
+    description: 'Apt lib'
+    required: true
+    default: var/lib/apt
+  cache: 
+    description: 'Apt cache'
+    required: true
+    default: var/cache/apt
+  pkgs: 
+    description: 'Apt packages'
     required: false
 runs:
   using: "composite"
   steps:
-      - if: ${{ inputs.etc && github.event.action != 'false' }}
+      - name: Prepare
+        shell: bash
+        run: |
+          echo 'CACHE_PATH<<EOF' >> $GITHUB_ENV          
+          echo ${{ inputs.lib }} >> $GITHUB_ENV          
+          echo ${{ inputs.cache }} >> $GITHUB_ENV
+          if [ '${{ inputs.etc }}' != 'false' ]; then
+            echo etc/apt >> $GITHUB_ENV          
+          fi
+          echo EOF >> $GITHUB_ENV
+          
+      - name: Restore
         uses: actions/cache/restore@v3
         with:
-          path: |
-            var/lib/apt
-            var/cache/apt
-            etc/apt
+          path: ${{ env.CACHE_PATH }}
           key: ${{ inputs.key }}
-      # Runs a set of commands using the runners shell
+          
       - name: Setup
         shell: bash
         run: |
-            for i in var/{lib,cache}/apt ; do sudo rm -R "/$i" || : ; mkdir -pv "$i"; sudo mv -v {,/}"$i" ; done
-            if [ -d etc/apt ]; then sudo rm -R "/etc/apt" || : ; sudo mv -v {,/}"etc/apt" ; fi
-      
+          for i in ${{ inputs.lib }} ${{ inputs.cache }} ; do 
+            sudo rm -R "/$i" || : 
+            mkdir -pv "$i"
+            sudo mv -v {,/}"$i"
+          done
+          if [ '${{ inputs.etc }}' != 'false' && -d etc/apt ]; then 
+            sudo rm -R "/etc/apt" || : 
+            sudo mv -v {,/}"etc/apt" 
+          fi
+          if [ -n '${{ inputs.pkgs }}' ]; then
+            apt-get update
+            apt-get install --no-install-recommends --no-install-suggests --yes --allow-downgrades ${{ inputs.pkgs }} 
+            apt-get autoclean
+          fi
