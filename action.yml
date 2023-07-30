@@ -1,23 +1,49 @@
-name: 'Hello World'
-description: 'Greet someone'
+name: 'Apt state saver'
+description: 'This action will try to save apt state'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
+  gh_token: 
+    description: 'Github token'
     required: true
-    default: 'World'
-outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+    default: ${{ secrets.GITHUB_TOKEN }}
+  gh_repo: 
+    description: 'Github repository'
+    required: true
+    default: ${{ github.repository }}
+  key: 
+    description: 'Cache key'
+    required: true
+    default: apt
 runs:
   using: "composite"
   steps:
-    - run: echo Hello ${{ inputs.who-to-greet }}.
-      shell: bash
-    - id: random-number-generator
-      run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
-      shell: bash
-    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
-      shell: bash
-    - run: goodbye.sh
-      shell: bash
+      - name: Restore apt state
+        uses: actions/cache@v3
+        with:
+          path: |
+            var/lib/apt
+            var/cache/apt
+            etc/apt
+          key: ${{ inputs.ch_key }}
+      
+      - name: Run this action
+        uses: gacts/run-and-post-run@v1
+        with:
+          run: |
+            for i in var/{lib,cache}/apt ; do sudo rm -R "/$i" || : ; mkdir -pv "$i"; sudo mv -v {,/}"$i" ; done
+            if [ -d etc/apt ]; then sudo rm -R "/etc/apt" || : ; sudo mv -v {,/}"etc/apt" ; fi
+          post: |
+            GH_TOKEN=${{ inputs.gh_token }} gh cache delete apt -R ${{ inputs.gh_repo }} || :
+            for i in /var/{lib/apt/lists,cache/apt/archives}/{partial,lock}; do sudo rm -R "$i" ||: ; done
+            for i in {var/{lib,cache},etc}; do mkdir -p "$i" || : ; sudo mv -v {/,}"$i"/apt ; done
+            
+           
+  
+  #  - run: echo Hello ${{ inputs.who-to-greet }}.
+  #    shell: bash
+  #  - id: random-number-generator
+  #    run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
+  #    shell: bash
+  #  - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+  #    shell: bash
+  #  - run: goodbye.sh
+  #    shell: bash
