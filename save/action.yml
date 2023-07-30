@@ -17,13 +17,16 @@ inputs:
     description: 'Apt cache'
     required: true
     default: var/cache/apt
+  token:
+    description: 'Github Token used in gh cache delete'
+    required: true
 runs:
   using: "composite"
   steps:
       - name: Cleanup
         shell: bash
         run: |
-          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} gh cache delete apt -R ${{ github.repository }} || :
+          GH_TOKEN=${{ inputs.token }} gh cache delete ${{ inputs.key }} || :
           for i in /{${{ inputs.lib }}/lists,${{ inputs.cache }}/archives}/{partial,lock}; do 
             sudo rm -R "$i" ||: 
           done
