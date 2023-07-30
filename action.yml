@@ -10,6 +10,7 @@ inputs:
   key: 
     description: 'Cache key'
     required: true
+    default: apt
 runs:
   using: "composite"
   steps:
@@ -20,7 +21,7 @@ runs:
             var/lib/apt
             var/cache/apt
             etc/apt
-          key: ${{ inputs.ch_key }}
+          key: ${{ inputs.key }}
       
       - name: Run this action
         uses: gacts/run-and-post-run@v1
