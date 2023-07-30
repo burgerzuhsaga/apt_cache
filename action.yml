@@ -10,7 +10,6 @@ inputs:
   key: 
     description: 'Cache key'
     required: true
-    default: apt
 runs:
   using: "composite"
   steps:
