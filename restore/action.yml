@@ -29,7 +29,7 @@ runs:
           echo 'CACHE_PATH<<EOF' >> $GITHUB_ENV          
           echo ${{ inputs.lib }} >> $GITHUB_ENV          
           echo ${{ inputs.cache }} >> $GITHUB_ENV
-          if [ '${{ inputs.etc }}' != 'false' ]; then
+          if test '${{ inputs.etc }}' != 'false' ; then
             echo etc/apt >> $GITHUB_ENV          
           fi
           echo EOF >> $GITHUB_ENV
@@ -48,9 +48,11 @@ runs:
             mkdir -pv "$i"
             sudo mv -v {,/}"$i"
           done
-          if [ '${{ inputs.etc }}' != 'false' && -d etc/apt ]; then 
-            sudo rm -R "/etc/apt" || : 
-            sudo mv -v {,/}"etc/apt" 
+          if test '${{ inputs.etc }}' != 'false' ; then
+            if test -d etc/apt ; then 
+                sudo rm -R "/etc/apt" || : 
+                sudo mv -v {,/}"etc/apt" 
+            fi
           fi
           if [ -n '${{ inputs.pkgs }}' ]; then
             apt-get update

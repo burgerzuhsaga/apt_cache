@@ -34,7 +34,7 @@ runs:
             mkdir -p "$(dirname "$i")" || : 
             sudo mv -v {/,}"$i"
           done
-          if [ '${{ inputs.etc }}' != 'false' ]; then
+          if test '${{ inputs.etc }}' != 'false' ; then
             mkdir -p "etc" || : 
             sudo mv -v {/,}etc/apt         
           fi
@@ -45,7 +45,7 @@ runs:
           echo 'CACHE_PATH<<EOF' >> $GITHUB_ENV          
           echo ${{ inputs.lib }} >> $GITHUB_ENV          
           echo ${{ inputs.cache }} >> $GITHUB_ENV
-          if [ '${{ inputs.etc }}' != 'false' ]; then
+          if test '${{ inputs.etc }}' != 'false' ; then
             echo etc/apt >> $GITHUB_ENV          
           fi
           echo EOF >> $GITHUB_ENV      
@@ -62,6 +62,6 @@ runs:
           for i in ${{ inputs.lib }} ${{ inputs.cache }}; do 
             sudo mv -v {,/}"$i" 
           done
-          if [ '${{ inputs.etc }}' != 'false' ]; then
+          if test '${{ inputs.etc }}' != 'false' ; then
             sudo mv -v {,/}etc/apt         
           fi
