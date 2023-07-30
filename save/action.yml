@@ -8,27 +8,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Restore
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            var/lib/apt
-            var/cache/apt
-            etc/apt
-          key: apt
-      # Runs a set of commands using the runners shell
-      - name: Setup
-        run: |
-            for i in var/{lib,cache}/apt ; do sudo rm -R "/$i" || : ; mkdir -pv "$i"; sudo mv -v {,/}"$i" ; done
-            if [ -d etc/apt ]; then sudo rm -R "/etc/apt" || : ; sudo mv -v {,/}"etc/apt" ; fi
-      
-      - name: Run
-        run: |
-          bash -x ./run.sh
-          
-          
       - name: Cleanup
+        shell: bash
         run: |
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }} gh cache delete apt -R ${{ github.repository }} || :
             for i in /var/{lib/apt/lists,cache/apt/archives}/{partial,lock}; do sudo rm -R "$i" ||: ; done
@@ -41,4 +22,9 @@ runs:
             var/lib/apt
             var/cache/apt
             etc/apt
-          key: apt
+          key: ${{ inputs.key }}
+
+      - name: Postjob
+        shell: bash
+        run: |
+            for i in {var/{lib,cache},etc}; do sudo mv -v {,/}"$i"/apt ; done
